@@ -1,0 +1,15 @@
+ATS EXPORTER - instrucciones rapidas
+====================================
+Solo Windows. No se instala NADA (sin Python, sin Excel).
+
+USO (modulo conectado por USB):
+  1) Cierra el Monitor Serial de Arduino (libera el puerto COM).
+  2) Doble clic a  exportar_ats.bat
+  -> Captura los datos, los guarda en  Documentos\ATS_EXPORT\<fecha>\
+     y genera + abre  REPORTE_ATS.xlsx  (Resumen, Eventos, Sucesos).
+     Watchdog: nunca se cuelga; si algo falla, los datos crudos quedan guardados.
+     Si el reporte no abriera, vuelve a dar doble clic a exportar_ats.bat.
+
+Si no funciona:
+  - "No se detecto el modulo"  -> revisa el cable y que el firmware este corriendo.
+  - "No se pudo abrir COMx"    -> cierra el Monitor Serial de Arduino y reintenta.
