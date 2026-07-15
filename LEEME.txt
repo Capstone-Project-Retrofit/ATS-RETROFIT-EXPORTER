@@ -1,15 +1,25 @@
-ATS EXPORTER - instrucciones rapidas
-====================================
-Solo Windows. No se instala NADA (sin Python, sin Excel).
+ATS EXPORTER - Reporte sin instalar NADA (PowerShell + CMD, nativos de Windows)
+==============================================================================
+NO necesita Python. NO necesita Excel. NO se instala nada. Solo Windows.
+El REPORTE_ATS.xlsx se arma inyectando los datos en la plantilla con PowerShell.
 
 USO (modulo conectado por USB):
   1) Cierra el Monitor Serial de Arduino (libera el puerto COM).
   2) Doble clic a  exportar_ats.bat
-  -> Captura los datos, los guarda en  Documentos\ATS_EXPORT\<fecha>\
-     y genera + abre  REPORTE_ATS.xlsx  (Resumen, Eventos, Sucesos).
-     Watchdog: nunca se cuelga; si algo falla, los datos crudos quedan guardados.
-     Si el reporte no abriera, vuelve a dar doble clic a exportar_ats.bat.
+  -> Captura EXPORT ALL, guarda los 6 crudos en Documentos\ATS_EXPORT\<fecha>\
+     y genera + abre REPORTE_ATS.xlsx.  Watchdog: NUNCA se cuelga; si algo falla,
+     los 6 crudos quedan guardados igual (no se pierde informacion).
 
-Si no funciona:
-  - "No se detecto el modulo"  -> revisa el cable y que el firmware este corriendo.
-  - "No se pudo abrir COMx"    -> cierra el Monitor Serial de Arduino y reintenta.
+RECUPERAR EL XLSX DE LO ULTIMO EXPORTADO:
+  Doble clic a  generar_reporte.bat  -> toma la ultima carpeta con crudos y arma el xlsx.
+
+ARCHIVOS
+  exportar_ats.bat / .ps1     -> captura serial + genera el reporte (USO REAL).
+  generar_reporte.bat         -> reporte de la ultima exportacion real.
+  Generar-ReporteATS.ps1      -> MOTOR: crudos -> REPORTE_ATS.xlsx (PowerShell puro).
+  Analizar-Predictivo.ps1     -> analisis predictivo del historial de perfiles.
+  plantilla_reporte_ats.xlsx  -> plantilla (RESUMEN / EVENTOS / SUCESOS).
+  REPORTE_ATS (ejemplo).xlsx  -> salida ya generada, para verla de una.
+
+Este kit REEMPLAZA la version que dependia de Python. En campo, la laptop del
+tecnico solo necesita Windows: cero descargas, cero instalaciones.

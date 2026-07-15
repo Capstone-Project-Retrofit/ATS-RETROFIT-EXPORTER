@@ -36,7 +36,7 @@ try{
       $linea=$port.ReadLine().TrimEnd("`r"); $inactivo=0; $recibio=$true
       if($linea -match '^----- INICIO (.+) -----$'){ $arch=$Matches[1].Trim(); $buf.Clear(); Write-Host ("Recibiendo "+$arch+"..."); continue }
       if($linea -match '^----- FIN (.+) -----$'){ if($arch){ $r=Join-Path $carpeta $arch; [System.IO.File]::WriteAllText($r,(($buf -join "`n")+"`n"),$enc); $guardados+=$r; Write-Host ("  [OK] "+$arch) }; $arch=$null; continue }
-      if($linea -eq '===== EXPORT ALL COMPLETO ====='){ break }
+      if($linea -like '===== EXPORT ALL COMPLETO*'){ break }
       if($arch){ [void]$buf.Add($linea) } elseif($linea){ Write-Host ("  modulo> "+$linea) }
     } catch [TimeoutException] {
       $inactivo++
@@ -54,12 +54,21 @@ Write-Host ""; Write-Host ("Crudos guardados ("+$guardados.Count+") en: "+$carpe
 
 # --- generar el xlsx (PowerShell puro). Si falla, los crudos quedan igual. ---
 try{
-  $rep=New-ReporteATS -Crudos $carpeta -Plantilla (Join-Path $here 'plantilla_reporte_ats.xlsx')
+  $stamp=Split-Path $carpeta -Leaf
+  $rep=New-ReporteATS -Crudos $carpeta -Plantilla (Join-Path $here 'plantilla_reporte_ats.xlsx') -Salida (Join-Path $carpeta ("REPORTE_ATS_"+$stamp+".xlsx"))
   Write-Host ("[OK] REPORTE_ATS.xlsx generado  (eventos="+$rep.Eventos+", sucesos="+$rep.Sucesos+", score="+$rep.Score+")")
-  try{ Invoke-Item $rep.Salida }catch{}
 } catch {
   Write-Host ("[AVISO] No se pudo generar el xlsx: "+$_.Exception.Message)
   Write-Host "        Los 6 archivos crudos quedaron guardados; puedes correr generar_reporte.bat luego."
 }
+# --- analisis predictivo (curvas de tendencia) si el analizador esta junto al kit ---
+$pred=Join-Path $here 'Analizar-Predictivo.ps1'
+if(Test-Path $pred){
+  try{ . $pred
+    $x=""; if($rep -and $rep.Salida -and (Test-Path $rep.Salida)){ $x=$rep.Salida }
+    Invoke-AnalisisPredictivo -Crudos $carpeta -Xlsx $x | Out-Null }
+  catch{ Write-Host ("[AVISO] Analisis predictivo no corrio: "+$_.Exception.Message) }
+}
+if($rep -and $rep.Salida -and (Test-Path $rep.Salida)){ try{ Invoke-Item $rep.Salida }catch{} }
 try{ Invoke-Item $carpeta }catch{}
 Write-Host ""; Read-Host "Enter para salir"

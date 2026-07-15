@@ -65,7 +65,10 @@ function New-ReporteATS{
       _SetCell ([ref]$s1) 'C20' $tt $true
       $vr="$($u.Vu_pre)"; if(-not(_IsNum $vr) -or $vr -eq '0'){ $vr="$($u.Vg_start)" }
       _SetCell ([ref]$s1) 'C21' $vr $true
-      _SetCell ([ref]$s1) 'C22' ("I="+("$($u.I_load)")+" A, P="+("$($u.P_load)")+" W") $false
+      $lect="I="+("$($u.I_load)")+" A, P="+("$($u.P_load)")+" W"
+      $fpl="$($u.FP_load)".Trim()
+      if($fpl){ $lect=$lect+", FP="+$fpl }
+      _SetCell ([ref]$s1) 'C22' $lect $false
     }
     $prob=""
     if($rend -match '(?s)Causa probable:(.*?)(Conclusion:|Nota:|$)'){
@@ -97,13 +100,26 @@ function New-ReporteATS{
       [void]$rows.Append((_DataCell 'I' $rn ("$($e.P_load)") $true))
       [void]$rows.Append((_DataCell 'J' $rn ("$($e.penaliza)") $true))
       [void]$rows.Append((_DataCell 'K' $rn ("$($e.score)") $true))
+      [void]$rows.Append((_DataCell 'L' $rn ("$($e.S_load_VA)") $true))
+      [void]$rows.Append((_DataCell 'M' $rn ("$($e.Q_load_var)") $true))
+      [void]$rows.Append((_DataCell 'N' $rn ("$($e.FP_load)") $true))
+      [void]$rows.Append((_DataCell 'O' $rn ("$($e.t_sin_suministro_s)") $true))
       [void]$rows.Append('</row>') }
     $nr2=[Math]::Max(2,$rn)
     $s2=[regex]::Replace($s2,'(?s)<sheetData>.*</sheetData>',('<sheetData>'+$rows.ToString()+'</sheetData>'))
-    $s2=$s2 -replace '<dimension ref="A1:K2"/>',('<dimension ref="A1:K'+$nr2+'"/>')
+    $s2=$s2 -replace '<dimension ref="A1:O2"/>',('<dimension ref="A1:O'+$nr2+'"/>')
     [System.IO.File]::WriteAllText($s2p,$s2,$enc)
     $t1p=Join-Path $unz 'xl/tables/table1.xml'; $t1=[System.IO.File]::ReadAllText($t1p,$enc)
-    $t1=$t1 -replace 'ref="A1:K2"',('ref="A1:K'+$nr2+'"'); [System.IO.File]::WriteAllText($t1p,$t1,$enc)
+    $t1=$t1 -replace 'ref="A1:O2"',('ref="A1:O'+$nr2+'"'); [System.IO.File]::WriteAllText($t1p,$t1,$enc)
+    # GRAFICA: ajustar el rango de las curvas (score y tiempos) al numero real de eventos
+    $chDir=Join-Path $unz 'xl/charts'
+    if(Test-Path $chDir){
+      foreach($cf in [System.IO.Directory]::GetFiles($chDir,'chart*.xml')){
+        $cx=[System.IO.File]::ReadAllText($cf,$enc)
+        $cx=$cx.Replace('$1001',('$'+$nr2))
+        [System.IO.File]::WriteAllText($cf,$cx,$enc)
+      }
+    }
 
     # ---- HOJA 3: TABLA SUCESOS ----
     $s3p=Join-Path $unz 'xl/worksheets/sheet3.xml'; $s3=[System.IO.File]::ReadAllText($s3p,$enc)
@@ -119,13 +135,14 @@ function New-ReporteATS{
       [void]$rows3.Append((_DataCell 'E' $rn ("$($x.Hz)") $true))
       [void]$rows3.Append((_DataCell 'F' $rn ("$($x.duracion_anterior_s)") $true))
       [void]$rows3.Append((_DataCell 'G' $rn ("$($x.diagnostico)") $false))
+      [void]$rows3.Append((_DataCell 'H' $rn ("$($x.FP)") $true))
       [void]$rows3.Append('</row>') }
     $nr3=[Math]::Max(2,$rn)
     $s3=[regex]::Replace($s3,'(?s)<sheetData>.*</sheetData>',('<sheetData>'+$rows3.ToString()+'</sheetData>'))
-    $s3=$s3 -replace '<dimension ref="A1:G2"/>',('<dimension ref="A1:G'+$nr3+'"/>')
+    $s3=$s3 -replace '<dimension ref="A1:H2"/>',('<dimension ref="A1:H'+$nr3+'"/>')
     [System.IO.File]::WriteAllText($s3p,$s3,$enc)
     $t2p=Join-Path $unz 'xl/tables/table2.xml'; $t2=[System.IO.File]::ReadAllText($t2p,$enc)
-    $t2=$t2 -replace 'ref="A1:G2"',('ref="A1:G'+$nr3+'"'); [System.IO.File]::WriteAllText($t2p,$t2,$enc)
+    $t2=$t2 -replace 'ref="A1:H2"',('ref="A1:H'+$nr3+'"'); [System.IO.File]::WriteAllText($t2p,$t2,$enc)
 
     # ---- RECOMPRIMIR ----
     $salidaReal=$Salida
